@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KnightShift — Beta Feedback</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:          #05070a;
+    --panel:       #0b1016;
+    --panel-up:    #111a22;
+    --outline:     #1c2a35;
+    --grid:        #16222c;
+    --cyan:        #00e5ff;
+    --cyan-dim:    #0091a8;
+    --ice:         #9fe8f5;
+    --text:        #c4d6e0;
+    --text-dim:    #6a8494;
+    --text-bright: #e8f7fc;
+    --warn:        #ffb020;
+    --danger:      #ff3b4d;
+    --good:        #23e6a8;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 40px 40px;
+    mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black 30%, transparent 100%);
+    -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black 30%, transparent 100%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg, transparent, transparent 2px,
+      rgba(0,229,255,0.012) 2px, rgba(0,229,255,0.012) 4px
+    );
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .wrap {
+    position: relative;
+    z-index: 1;
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 0 24px 80px;
+  }
+
+  header {
+    padding: 56px 0 48px;
+    text-align: center;
+  }
+
+  .wordmark {
+    font-family: 'Space Mono', monospace;
+    font-size: clamp(28px, 6vw, 44px);
+    letter-spacing: 0.06em;
+    font-weight: 700;
+    line-height: 1;
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.2em;
+  }
+  .wordmark .knight { color: var(--text-bright); }
+  .wordmark .shift  { color: var(--cyan); }
+
+  .tagline {
+    margin-top: 10px;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+  }
+
+  .badge {
+    display: inline-block;
+    margin-top: 18px;
+    padding: 4px 12px;
+    border: 1px solid var(--warn);
+    border-radius: 3px;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    color: var(--warn);
+    text-transform: uppercase;
+  }
+
+  .glow-line {
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+    margin: 40px 0;
+    position: relative;
+  }
+  .glow-line::after {
+    content: '';
+    position: absolute;
+    inset: -4px 20%;
+    background: linear-gradient(90deg, transparent, rgba(0,229,255,0.15), transparent);
+    filter: blur(6px);
+  }
+
+  .nda {
+    background: rgba(255,59,77,0.06);
+    border: 1px solid rgba(255,59,77,0.3);
+    border-radius: 6px;
+    padding: 20px 24px;
+    margin-bottom: 36px;
+  }
+  .nda-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    color: var(--danger);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .nda-label::before {
+    content: '';
+    display: inline-block;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--danger);
+    box-shadow: 0 0 8px var(--danger);
+    flex-shrink: 0;
+  }
+  .nda p { font-size: 14px; color: var(--text); line-height: 1.65; }
+  .nda strong { color: var(--text-bright); }
+
+  .intro { margin-bottom: 40px; }
+  .intro h2 {
+    font-size: 22px; font-weight: 600;
+    color: var(--text-bright); margin-bottom: 12px; line-height: 1.3;
+  }
+  .intro p { font-size: 15px; color: var(--text); line-height: 1.7; }
+
+  .form-section {
+    background: var(--panel);
+    border: 1px solid var(--outline);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .form-section-header {
+    padding: 14px 24px;
+    background: var(--panel-up);
+    border-bottom: 1px solid var(--outline);
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    color: var(--cyan-dim);
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .form-section-header::before {
+    content: '';
+    display: inline-block;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--cyan);
+    box-shadow: 0 0 8px var(--cyan);
+  }
+
+  .form-body { padding: 28px 24px; }
+
+  .field { margin-bottom: 24px; }
+  .field:last-child { margin-bottom: 0; }
+
+  label {
+    display: block;
+    font-size: 13px; font-weight: 500;
+    color: var(--ice); margin-bottom: 8px; letter-spacing: 0.02em;
+  }
+  label .req { color: var(--cyan); margin-left: 2px; }
+
+  input[type="text"],
+  input[type="email"],
+  select,
+  textarea {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--outline);
+    border-radius: 5px;
+    color: var(--text-bright);
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 15px;
+    padding: 12px 14px;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  input[type="text"]:focus,
+  input[type="email"]:focus,
+  select:focus,
+  textarea:focus {
+    border-color: var(--cyan-dim);
+    box-shadow: 0 0 0 3px rgba(0,229,255,0.08);
+  }
+  textarea { resize: vertical; min-height: 100px; line-height: 1.6; }
+
+  select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236a8494' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 38px;
+    cursor: pointer;
+  }
+  select option { background: var(--panel-up); }
+
+  /* hidden field Formspree needs */
+  input[type="hidden"] { display: none; }
+
+  .stars {
+    display: flex;
+    gap: 6px;
+    flex-direction: row-reverse;
+    justify-content: flex-end;
+  }
+  .stars input { display: none; }
+  .stars label {
+    font-size: 28px;
+    color: var(--outline);
+    cursor: pointer;
+    transition: color 0.1s;
+    margin: 0; padding: 0 2px;
+    user-select: none;
+  }
+  .stars input:checked ~ label,
+  .stars label:hover,
+  .stars label:hover ~ label {
+    color: var(--cyan);
+    text-shadow: 0 0 12px rgba(0,229,255,0.4);
+  }
+
+  .check-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  @media (max-width: 480px) { .check-group { grid-template-columns: 1fr; } }
+
+  .check-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--bg);
+    border: 1px solid var(--outline);
+    border-radius: 5px;
+    padding: 10px 12px;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .check-item:has(input:checked) {
+    border-color: var(--cyan-dim);
+    background: rgba(0,229,255,0.04);
+  }
+  .check-item input[type="checkbox"] {
+    width: 16px; height: 16px;
+    flex-shrink: 0;
+    accent-color: var(--cyan);
+    cursor: pointer;
+  }
+  .check-item span { font-size: 13px; color: var(--text); line-height: 1.3; }
+
+  .nda-check {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    background: rgba(0,229,255,0.03);
+    border: 1px solid var(--outline);
+    border-radius: 5px;
+    padding: 14px;
+    cursor: pointer;
+  }
+  .nda-check input[type="checkbox"] {
+    width: 18px; height: 18px;
+    flex-shrink: 0; margin-top: 1px;
+    accent-color: var(--cyan); cursor: pointer;
+  }
+  .nda-check span { font-size: 13px; color: var(--text); line-height: 1.5; }
+  .nda-check strong { color: var(--text-bright); }
+
+  .submit-row {
+    margin-top: 32px;
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .btn-submit {
+    background: transparent;
+    border: 1px solid var(--cyan);
+    color: var(--cyan);
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 15px; font-weight: 600;
+    padding: 14px 36px;
+    border-radius: 5px;
+    cursor: pointer;
+    letter-spacing: 0.04em;
+    transition: background 0.15s, box-shadow 0.15s;
+    position: relative; overflow: hidden;
+  }
+  .btn-submit:hover:not(:disabled) {
+    background: rgba(0,229,255,0.08);
+    box-shadow: 0 0 20px rgba(0,229,255,0.15);
+  }
+  .btn-submit:disabled { opacity: 0.45; cursor: not-allowed; }
+  .btn-submit.loading::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: -100%;
+    width: 100%; height: 2px;
+    background: var(--cyan);
+    animation: sweep 1.2s linear infinite;
+  }
+  @keyframes sweep { to { left: 100%; } }
+
+  .status {
+    margin-top: 20px; padding: 16px 20px;
+    border-radius: 6px; font-size: 14px; line-height: 1.5;
+    display: none;
+  }
+  .status.visible { display: block; }
+  .status.error {
+    background: rgba(255,59,77,0.06);
+    border: 1px solid rgba(255,59,77,0.3);
+    color: var(--danger);
+  }
+
+  .success-screen {
+    display: none; text-align: center; padding: 60px 24px;
+  }
+  .success-screen.visible { display: block; }
+  .success-icon {
+    width: 64px; height: 64px; border-radius: 50%;
+    border: 2px solid var(--good);
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 24px;
+    font-size: 26px; color: var(--good);
+    box-shadow: 0 0 24px rgba(35,230,168,0.2);
+  }
+  .success-screen h3 { font-size: 22px; color: var(--text-bright); margin-bottom: 10px; }
+  .success-screen p { font-size: 15px; color: var(--text-dim); max-width: 400px; margin: 0 auto; }
+
+  footer {
+    margin-top: 60px; text-align: center;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px; letter-spacing: 0.14em;
+    color: var(--text-dim); padding-bottom: 20px;
+  }
+
+  .field-error input,
+  .field-error select,
+  .field-error textarea { border-color: var(--danger) !important; }
+  .field-error-msg { font-size: 12px; color: var(--danger); margin-top: 6px; display: none; }
+  .field-error .field-error-msg { display: block; }
+
+  .hint { font-size: 12px; color: var(--text-dim); margin-top: 6px; line-height: 1.45; }
+  .form-divider { border: none; border-top: 1px solid var(--outline); margin: 28px 0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="wordmark">
+      <span class="knight">KNIGHT</span><span class="shift">SHIFT</span>
+    </div>
+    <div class="tagline">Analyse &nbsp;·&nbsp; Filter &nbsp;·&nbsp; Tune</div>
+    <div class="badge">Private Beta</div>
+  </header>
+
+  <div class="glow-line"></div>
+
+  <div class="nda">
+    <div class="nda-label">Confidential — Do not share</div>
+    <p>
+      This plugin is a <strong>private beta build</strong>. You've been selected to test it before public release.
+      <strong>Do not share the plugin, this link, or any screenshots</strong> with anyone outside this beta.
+      Your feedback directly shapes what ships.
+    </p>
+  </div>
+
+  <div class="intro">
+    <h2>Tell me what you found</h2>
+    <p>
+      KnightShift combines a spectrum analyser with correlation metering, a high-order filter designer,
+      and a precision tuner — all in one plugin. Take it for a real session, then fill this out.
+      Honest feedback only. There are no wrong answers.
+    </p>
+  </div>
+
+  <div class="form-section" id="formSection">
+    <div class="form-section-header">Beta Feedback Form</div>
+    <div class="form-body">
+
+      <div class="field" id="f-name">
+        <label>Your name <span class="req">*</span></label>
+        <input type="text" id="inp-name" placeholder="First and last name" autocomplete="name">
+        <div class="field-error-msg">Please enter your name.</div>
+      </div>
+
+      <div class="field" id="f-email">
+        <label>Your email <span class="req">*</span></label>
+        <input type="email" id="inp-email" placeholder="you@example.com" autocomplete="email">
+        <div class="field-error-msg">Please enter a valid email address.</div>
+      </div>
+
+      <div class="field">
+        <label>DAW you tested in</label>
+        <select id="inp-daw">
+          <option value="">Select your DAW</option>
+          <option>FL Studio 21</option>
+          <option>FL Studio 20</option>
+          <option>Ableton Live</option>
+          <option>Logic Pro</option>
+          <option>Pro Tools</option>
+          <option>Reaper</option>
+          <option>Studio One</option>
+          <option>Cubase</option>
+          <option>Other</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>How long did you test it?</label>
+        <select id="inp-duration">
+          <option value="">Select a range</option>
+          <option>Less than 30 minutes</option>
+          <option>30–60 minutes</option>
+          <option>1–3 hours</option>
+          <option>Multiple sessions</option>
+        </select>
+      </div>
+
+      <hr class="form-divider">
+
+      <div class="field">
+        <label>Rate the Analyser tab <span class="req">*</span></label>
+        <div class="hint" style="margin-bottom:10px">Spectrum display, correlation meter, metering.</div>
+        <div class="stars" id="stars-analyser">
+          <input type="radio" name="r-analyser" id="a5" value="5"><label for="a5">★</label>
+          <input type="radio" name="r-analyser" id="a4" value="4"><label for="a4">★</label>
+          <input type="radio" name="r-analyser" id="a3" value="3"><label for="a3">★</label>
+          <input type="radio" name="r-analyser" id="a2" value="2"><label for="a2">★</label>
+          <input type="radio" name="r-analyser" id="a1" value="1"><label for="a1">★</label>
+        </div>
+        <div class="field-error-msg" id="err-analyser">Please give the Analyser a rating.</div>
+      </div>
+
+      <div class="field">
+        <label>Rate the Filter tab <span class="req">*</span></label>
+        <div class="hint" style="margin-bottom:10px">High-order filter designer with live response curve.</div>
+        <div class="stars" id="stars-filter">
+          <input type="radio" name="r-filter" id="f5" value="5"><label for="f5">★</label>
+          <input type="radio" name="r-filter" id="f4" value="4"><label for="f4">★</label>
+          <input type="radio" name="r-filter" id="f3" value="3"><label for="f3">★</label>
+          <input type="radio" name="r-filter" id="f2" value="2"><label for="f2">★</label>
+          <input type="radio" name="r-filter" id="f1" value="1"><label for="f1">★</label>
+        </div>
+        <div class="field-error-msg" id="err-filter">Please give the Filter a rating.</div>
+      </div>
+
+      <div class="field">
+        <label>Rate the Tuner tab <span class="req">*</span></label>
+        <div class="hint" style="margin-bottom:10px">Note detection, cents accuracy, key detection.</div>
+        <div class="stars" id="stars-tuner">
+          <input type="radio" name="r-tuner" id="t5" value="5"><label for="t5">★</label>
+          <input type="radio" name="r-tuner" id="t4" value="4"><label for="t4">★</label>
+          <input type="radio" name="r-tuner" id="t3" value="3"><label for="t3">★</label>
+          <input type="radio" name="r-tuner" id="t2" value="2"><label for="t2">★</label>
+          <input type="radio" name="r-tuner" id="t1" value="1"><label for="t1">★</label>
+        </div>
+        <div class="field-error-msg" id="err-tuner">Please give the Tuner a rating.</div>
+      </div>
+
+      <hr class="form-divider">
+
+      <div class="field" id="f-useful">
+        <label>What was the most useful part? <span class="req">*</span></label>
+        <textarea id="inp-useful" placeholder="Tell me what actually helped in your session..."></textarea>
+        <div class="field-error-msg">Please fill this in.</div>
+      </div>
+
+      <div class="field">
+        <label>Did anything feel off or not work right?</label>
+        <textarea id="inp-issues" placeholder="Bugs, crashes, UI confusion, anything unexpected..."></textarea>
+      </div>
+
+      <div class="field">
+        <label>Which tabs did you use most?</label>
+        <div class="check-group">
+          <label class="check-item"><input type="checkbox" class="tab-check" value="Analyser"><span>Analyser</span></label>
+          <label class="check-item"><input type="checkbox" class="tab-check" value="Filter"><span>Filter</span></label>
+          <label class="check-item"><input type="checkbox" class="tab-check" value="Tuner"><span>Tuner</span></label>
+          <label class="check-item"><input type="checkbox" class="tab-check" value="All roughly equally"><span>All roughly equally</span></label>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Would you use this in your regular workflow?</label>
+        <select id="inp-would-use">
+          <option value="">Select one</option>
+          <option>Yes, definitely</option>
+          <option>Probably yes</option>
+          <option>Maybe</option>
+          <option>Probably not</option>
+          <option>No</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Anything else you want me to know?</label>
+        <textarea id="inp-other" placeholder="Feature requests, comparisons to other tools, general thoughts..."></textarea>
+      </div>
+
+      <hr class="form-divider">
+
+      <div class="field" id="f-agree">
+        <label class="nda-check">
+          <input type="checkbox" id="inp-agree">
+          <span>
+            I understand this is a <strong>private beta</strong> and I will not share the plugin,
+            this feedback link, or any information about KnightShift with anyone outside this beta program.
+          </span>
+        </label>
+        <div class="field-error-msg">You must agree to continue.</div>
+      </div>
+
+      <div class="submit-row">
+        <button class="btn-submit" id="submitBtn">Send feedback</button>
+      </div>
+
+      <div class="status" id="statusMsg"></div>
+
+    </div>
+  </div>
+
+  <div class="success-screen" id="successScreen">
+    <div class="success-icon">✓</div>
+    <h3>Feedback received</h3>
+    <p>Thanks for taking the time. Your input goes straight to development and will shape the final release.</p>
+  </div>
+
+  <div class="glow-line"></div>
+
+  <footer>KNIGHTSHIFT AUDIO &nbsp;·&nbsp; PRIVATE BETA &nbsp;·&nbsp; DO NOT DISTRIBUTE</footer>
+
+</div>
+
+<script>
+(function () {
+  // ── Formspree endpoint — replace XXXX with your form ID after signing up at formspree.io
+  const FORMSPREE_URL = "https://formspree.io/f/mdekoaag";
+
+  const $ = id => document.getElementById(id);
+  const btn = $("submitBtn");
+  const statusMsg = $("statusMsg");
+
+  function showError(msg) {
+    statusMsg.className = "status error visible";
+    statusMsg.textContent = msg;
+  }
+
+  function getStars(name) {
+    const el = document.querySelector(`input[name="${name}"]:checked`);
+    return el ? el.value + "/5" : "";
+  }
+
+  function getCheckedTabs() {
+    const els = document.querySelectorAll(".tab-check:checked");
+    return Array.from(els).map(e => e.value).join(", ") || "None selected";
+  }
+
+  function validate() {
+    let ok = true;
+
+    const nameVal = $("inp-name").value.trim();
+    $("f-name").classList.toggle("field-error", !nameVal);
+    if (!nameVal) ok = false;
+
+    const emailVal = $("inp-email").value.trim();
+    const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal);
+    $("f-email").classList.toggle("field-error", !emailOk);
+    if (!emailOk) ok = false;
+
+    ["analyser", "filter", "tuner"].forEach(tab => {
+      const missing = !getStars("r-" + tab);
+      $("err-" + tab).style.display = missing ? "block" : "none";
+      if (missing) ok = false;
+    });
+
+    const usefulVal = $("inp-useful").value.trim();
+    $("f-useful").classList.toggle("field-error", !usefulVal);
+    if (!usefulVal) ok = false;
+
+    const agreed = $("inp-agree").checked;
+    $("f-agree").classList.toggle("field-error", !agreed);
+    if (!agreed) ok = false;
+
+    return ok;
+  }
+
+  btn.addEventListener("click", async () => {
+    statusMsg.className = "status";
+    if (!validate()) {
+      showError("Please fill in the required fields above.");
+      document.querySelector(".field-error")?.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
+
+    btn.disabled = true;
+    btn.classList.add("loading");
+    btn.textContent = "Sending...";
+
+    const payload = {
+      _replyto:         $("inp-email").value.trim(),
+      _subject:         "KnightShift Beta Feedback — " + $("inp-name").value.trim(),
+      Name:             $("inp-name").value.trim(),
+      Email:            $("inp-email").value.trim(),
+      DAW:              $("inp-daw").value || "Not specified",
+      "Testing duration": $("inp-duration").value || "Not specified",
+      "Analyser rating":  getStars("r-analyser"),
+      "Filter rating":    getStars("r-filter"),
+      "Tuner rating":     getStars("r-tuner"),
+      "Most useful":      $("inp-useful").value.trim(),
+      "Issues reported":  $("inp-issues").value.trim() || "None",
+      "Tabs used most":   getCheckedTabs(),
+      "Would use regularly": $("inp-would-use").value || "Not answered",
+      "Additional comments": $("inp-other").value.trim() || "None",
+    };
+
+    try {
+      const res = await fetch(FORMSPREE_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Accept": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (res.ok) {
+        $("formSection").style.display = "none";
+        $("successScreen").classList.add("visible");
+      } else {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Server error " + res.status);
+      }
+    } catch (err) {
+      btn.disabled = false;
+      btn.classList.remove("loading");
+      btn.textContent = "Send feedback";
+      showError("Could not send — please try again in a moment. (" + err.message + ")");
+    }
+  });
+})();
+</script>
+</body>
+</html>
